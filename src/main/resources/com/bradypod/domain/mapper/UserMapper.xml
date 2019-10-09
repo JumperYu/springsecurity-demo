@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bradypod.domain.mapper.UserMapper">
+
+    <resultMap id="User" type="com.bradypod.domain.model.User">
+        <result property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <sql id="select_columns">
+        id,username,password,status,create_time,update_time,version
+	</sql>
+
+    <sql id="find_where">
+        <where>
+            <if test="@Ognl@isNotEmpty(id)">
+                AND id = #{id}
+            </if>
+            <if test="@Ognl@isNotEmpty(username)">
+                AND username = #{username}
+            </if>
+            <if test="@Ognl@isNotEmpty(password)">
+                AND password = #{password}
+            </if>
+            <if test="@Ognl@isNotEmpty(status)">
+                AND status = #{status}
+            </if>
+            <if test="@Ognl@isNotEmpty(createTime)">
+                AND create_time = #{createTime}
+            </if>
+            <if test="@Ognl@isNotEmpty(createTimeEnd)">
+                AND update_time = #{updateTime}
+            </if>
+            <if test="@Ognl@isNotEmpty(version)">
+                AND version = #{version}
+            </if>
+        </where>
+    </sql>
+
+    <sql id="find_page_where">
+        <where>
+        </where>
+    </sql>
+
+    <sql id="set_columns">
+        <set>
+            <if test="@Ognl@isNotEmpty(password)">
+                password = #{password},
+            </if>
+            <if test="@Ognl@isNotEmpty(status)">
+                status = #{status},
+            </if>
+            <if test="@Ognl@isNotEmpty(createTime)">
+                create_time = #{createTime},
+            </if>
+            update_time = now(), version = version + 1
+        </set>
+    </sql>
+
+    <insert id="save" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_user (
+            id,
+            username,
+            password,
+            status,
+            create_time,
+            update_time,
+            version
+        ) VALUES (
+            #{id},
+            #{username},
+            #{password},
+            #{status},
+            #{createTime},
+            #{updateTime},
+            #{version}
+        )
+	</insert>
+
+    <update id="update">
+        UPDATE t_user
+        <include refid="set_columns"/>
+        <where>
+            id = #{id}
+            <if test="@Ognl@isNotEmpty(version)">
+                and version = #{version}
+            </if>
+        </where>
+    </update>
+
+    <delete id="delete">
+        DELETE FROM t_user WHERE
+        id = #{id}
+	</delete>
+
+    <select id="get" resultMap="User">
+        SELECT
+        <include refid="select_columns"/>
+        FROM t_user
+        <where>
+            <if test="@Ognl@isNotEmpty(id)">
+                id = #{id}
+            </if>
+            <if test="@Ognl@isNotEmpty(username)">
+                and username = #{username}
+            </if>
+        </where>
+    </select>
+
+    <select id="getByUsername" resultMap="User">
+        SELECT
+        <include refid="select_columns"/>
+        FROM t_user t
+        WHERE
+        t.username = #{username}
+    </select>
+
+    <sql id="pageLimit">
+        LIMIT #{offset}, #{limit}
+    </sql>
+
+    <select id="countData" resultType="java.lang.Integer">
+        SELECT count(1) FROM t_user
+        <include refid="find_page_where"/>
+    </select>
+
+    <select id="listData" resultMap="User">
+        SELECT
+        <include refid="select_columns"/>
+        FROM t_user
+        <include refid="find_page_where"/>
+
+        <if test="@Ognl@isNotEmpty(orderBy)">
+            ORDER BY ${sort} ${orderBy}
+        </if>
+        <include refid="pageLimit"/>
+    </select>
+</mapper>
